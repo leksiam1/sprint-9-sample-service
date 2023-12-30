@@ -6,16 +6,34 @@ replicaCount: 1
 
 image:
   # Link to your container registry. You will launch it in Yandex Cloud.
-  repository: cr.yandex/...
+  repository: cr.yandex/crpkqq3h6l5ujnvhb0dk/stg_service
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "your-tag"
+  tag: "v2023-12-31-r1"
 
 containerPort: 5000
 
 config:
   EXAMPLE_ENV1: "value"
   EXAMPLE_ANOTHER_ENV2: "value"
+
+  KAFKA_HOST: "rc1a-9ntr19s0p7mjntbm.mdb.yandexcloud.net"
+  KAFKA_PORT: "9091"
+  KAFKA_CONSUMER_USERNAME: "producer_consumer"
+  KAFKA_CONSUMER_PASSWORD: "res1#pass_leks"
+  KAFKA_CONSUMER_GROUP: "main-consumer-group"
+  KAFKA_SOURCE_TOPIC: "order-service_orders"
+  KAFKA_STG_SERVICE_ORDERS_TOPI: "stg-service-orders"
+
+  PG_WAREHOUSE_HOST: "rc1b-gtbw23dw6wwofm3k.mdb.yandexcloud.net"
+  PG_WAREHOUSE_PORT: "6432"
+  PG_WAREHOUSE_DBNAME: "sprint9dwh"
+  PG_WAREHOUSE_USER: "db_user"
+  PG_WAREHOUSE_PASSWORD: "db#user$pass2024"
+
+  REDIS_HOST: "c-c9q5gvcjejp3p8cl867k.rw.mdb.yandexcloud.net"
+  REDIS_PORT: "6380"
+  REDIS_PASSWORD: "res1#pass_leks"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -30,7 +48,7 @@ resources:
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   limits:
     cpu: 100m
-    memory: 128Mi
+    memory: 64Mi
   requests:
     cpu: 100m
-    memory: 128Mi
+    memory: 64Mi
