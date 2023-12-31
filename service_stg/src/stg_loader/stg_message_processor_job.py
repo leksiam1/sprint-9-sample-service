@@ -3,7 +3,7 @@ from datetime import datetime
 from logging import Logger
 
 
-class SampleMessageProcessor:
+class StgMessageProcessor:
     def __init__(self,
                  logger: Logger) -> None:
         self._logger = logger
