@@ -26,7 +26,18 @@ class StgMessageProcessor:
         self._logger.info(f"{datetime.utcnow()}: START")
 
         # Имитация работы. Здесь будет реализована обработка сообщений.
-        time.sleep(2)
+        for i in range(self._batch_size):
+
+            # Получите сообщение из Kafka с помощью consume.
+            msg_in = self._consumer.consume()
+
+            # Если все сообщения из Kafka обработаны, то consume вернёт None. В этом случае стоит прекратить обработку раньше.
+            if msg_in is None:
+                break
+
+
+
+            time.sleep(2)
 
         # Пишем в лог, что джоб успешно завершен.
         self._logger.info(f"{datetime.utcnow()}: FINISH")
