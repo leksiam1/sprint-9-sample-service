@@ -5,6 +5,7 @@ from flask import Flask
 
 from app_config import AppConfig
 from stg_loader.stg_message_processor_job import StgMessageProcessor
+from stg_loader.repository.stg_repository import StgRepository
 
 batch_size = 100 # Размер батча, обрабатываемого за один запуск. 
 
@@ -27,8 +28,14 @@ if __name__ == '__main__':
     config = AppConfig()
 
     # Инициализируем процессор сообщений.
-    # Пока он пустой. Нужен для того, чтобы потом в нем писать логику обработки сообщений из Kafka.
-    proc = StgMessageProcessor(config.kafka_consumer, config.kafka_producer, config.redis_client, config.pg_warehouse_db, batch_size, app.logger)
+    proc = StgMessageProcessor(
+        config.kafka_consumer(), 
+        config.kafka_producer(), 
+        config.redis_client(), 
+        StgRepository(config.pg_warehouse_db()),
+        batch_size,
+        app.logger
+    )
 
     # Запускаем процессор в бэкграунде.
     # BackgroundScheduler будет по расписанию вызывать функцию run нашего обработчика(StgMessageProcessor).

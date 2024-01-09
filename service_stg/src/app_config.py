@@ -1,8 +1,8 @@
 import os
 
-from lib.kafka_connect import KafkaConsumer, KafkaProducer
-from lib.pg import PgConnect
-from lib.redis import RedisClient
+from lib.kafka_connect.kafka_connectors import KafkaConsumer, KafkaProducer
+from lib.pg.pg_connect import PgConnect
+from lib.redis.redis_client import RedisClient
 
 
 class AppConfig:
@@ -29,7 +29,7 @@ class AppConfig:
         self.pg_warehouse_port = int(str(os.getenv('PG_WAREHOUSE_PORT') or 0))
         self.pg_warehouse_dbname = str(os.getenv('PG_WAREHOUSE_DBNAME') or "")
         self.pg_warehouse_user = str(os.getenv('PG_WAREHOUSE_USER') or "")
-        self.pg_warehouse_password = str(os.getenv('PG_WAREHOUSE_PASSWORD') or "")
+        self.pg_warehouse_password = str(os.getenv('REDIS_PASSWORD') or "")
 
     def kafka_producer(self):
         return KafkaProducer(

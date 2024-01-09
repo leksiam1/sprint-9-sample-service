@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from lib.pg import PgConnect
+from lib.pg.pg_connect import PgConnect
 
 class StgRepository:
     def __init__(self, db: PgConnect) -> None:
@@ -24,12 +24,12 @@ class StgRepository:
                             sent_dttm
                         )
                         VALUES(
-                            object_id, 
-                            payload, 
-                            object_type, 
-                            sent_dttm
+                            %(object_id)s, 
+                            %(payload)s, 
+                            %(object_type)s, 
+                            %(sent_dttm)s
                         )
-                        on conflict () do update 
+                        on conflict (object_id) do update 
                         set payload = EXCLUDED.payload, 
                             object_type = EXCLUDED.object_type, 
                             sent_dttm = EXCLUDED.sent_dttm

@@ -9,14 +9,11 @@ image:
   repository: cr.yandex/crpkqq3h6l5ujnvhb0dk/stg_service
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v2024-01-03-r3"
+  tag: "v2024-01-09-r5"
 
 containerPort: 5000
 
 config:
-  EXAMPLE_ENV1: "value"
-  EXAMPLE_ANOTHER_ENV2: "value"
-
   KAFKA_HOST: "rc1a-9ntr19s0p7mjntbm.mdb.yandexcloud.net"
   KAFKA_PORT: "9091"
   KAFKA_CONSUMER_USERNAME: "producer_consumer"
@@ -29,7 +26,7 @@ config:
   PG_WAREHOUSE_PORT: "6432"
   PG_WAREHOUSE_DBNAME: "sprint9dwh"
   PG_WAREHOUSE_USER: "db_user"
-  PG_WAREHOUSE_PASSWORD: "db#user$pass2024"
+  PG_WAREHOUSE_PASSWORD: "res1#pass_leks"
 
   REDIS_HOST: "c-c9q5gvcjejp3p8cl867k.rw.mdb.yandexcloud.net"
   REDIS_PORT: "6380"
