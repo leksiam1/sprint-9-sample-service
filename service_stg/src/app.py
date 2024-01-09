@@ -29,12 +29,12 @@ if __name__ == '__main__':
 
     # Инициализируем процессор сообщений.
     proc = StgMessageProcessor(
-        config.kafka_consumer(), 
-        config.kafka_producer(), 
-        config.redis_client(), 
-        StgRepository(config.pg_warehouse_db()),
-        batch_size,
-        app.logger
+        consumer=config.kafka_consumer(),
+        producer=config.kafka_producer(),
+        redis=config.redis_client(),
+        stg_repository=StgRepository(config.pg_warehouse_db()),
+        batch_size=batch_size,
+        logger=app.logger
     )
 
     # Запускаем процессор в бэкграунде.

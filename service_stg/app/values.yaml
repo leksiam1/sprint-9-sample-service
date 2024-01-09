@@ -9,7 +9,7 @@ image:
   repository: cr.yandex/crpkqq3h6l5ujnvhb0dk/stg_service
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v2024-01-09-r5"
+  tag: "v2024-01-10-r7"
 
 containerPort: 5000
 

@@ -1,24 +1,13 @@
 import json
 from datetime import datetime
 from logging import Logger
+from typing import List, Dict
 from lib.kafka_connect.kafka_connectors import KafkaConsumer, KafkaProducer
 from lib.redis.redis_client import RedisClient
 from stg_loader.repository.stg_repository import StgRepository
 
-# Получить вложенный елемент из dict с проверкой, если вдруг такого елемента нет(через get)  
-def get_nested(data:dict, *args):
-    if args and data:
-        element  = args[0]
-        if element:
-            value = data.get(element)
-            return value if len(args) == 1 else get_nested(value, *args[1:])   
-
 
 class StgMessageProcessor:
-    JSON_IN_SCHEMA = {
-                        "type": "object",
-                        "required": ["object_id","object_type","payload","sent_dttm"],
-                     }
     def __init__(self,
                  consumer: KafkaConsumer,
                  producer: KafkaProducer,
@@ -35,74 +24,80 @@ class StgMessageProcessor:
 
     # функция, которая будет вызываться по расписанию.
     def run(self) -> None:
-        msg_out = {}
-
-        # Пишем в лог, что джоб был запущен.        
+        # Пишем в лог, что джоб был запущен.
         self._logger.info(f"{datetime.utcnow()}: START")
-
-        for i in range(self._batch_size):
-            # Получаем сообщение из Kafka с помощью consume.
+        
+        for _ in range(self._batch_size):
             msg_in = self._consumer.consume()
-            # Если все сообщения из Kafka обработаны, то consume вернёт None. В этом случае стоит прекратить обработку раньше.
-            if msg_in is None:
+            if not msg_in:
                 break
-            #Вставляем JSON в STG
-            if msg_in.get('object_type'):
-                self._stg_repository.order_events_insert(object_id   = msg_in['object_id'],
-                                                            object_type = msg_in['object_type'],
-                                                            sent_dttm   = msg_in['sent_dttm'],
-                                                            payload     = json.dumps(msg_in['payload']))
-                # получаем информацию о пользователе из Redis
-                user_id = get_nested(msg_in,"payload","user","id")
-                restaurant_id = get_nested(msg_in,"payload","restaurant","id")
-                
-                # получаем информацию о ресторане из Redis
-                user_info = self._redis.get(user_id)
-                restaurant_info = self._redis.get(restaurant_id)
-                
-                #Формируем выходное сообщение            
-                msg_out["object_id"]     = msg_in['object_id']
-                msg_out["object_type"]   = msg_in['object_type']
-                msg_out["payload"]       = {
-                                                "id"  : msg_in['object_id'],
-                                                "date": get_nested(msg_in,"payload","date"),
-                                                "cost": get_nested(msg_in,"payload","cost"),
-                                                "payment": get_nested(msg_in,"payload","payment"),
-                                                "status" : get_nested(msg_in,"payload","final_status"),
-                                                "restaurant": {
-                                                                    "id": restaurant_id,
-                                                                    "name": restaurant_info.get("name")
-                                                                },
-                                                "user": {
-                                                            "id"   : user_id,
-                                                            "name": user_info.get("name")
-                                                },
-                                                "products": self.get_product_list(get_nested(msg_in,"payload",
-                                                                                                      "order_items"),
-                                                                                 restaurant_info)
-                                                }
-                #Отправляем выходное сообщение в kafka
-                self._producer.produce(msg_out)
-    
+
+            self._logger.info(f"{datetime.utcnow()}: Message received")
+
+            order = msg_in['payload']
+            self._stg_repository.order_events_insert(
+                msg_in["object_id"],
+                msg_in["object_type"],
+                msg_in["sent_dttm"],
+                json.dumps(order))
+
+            user_id = order["user"]["id"]
+            user = self._redis.get(user_id)
+            user_name = user["name"]
+            user_login = user["login"]
+
+            restaurant_id = order['restaurant']['id']
+            restaurant = self._redis.get(restaurant_id)
+            restaurant_name = restaurant["name"]
+
+            msg_out = {
+                "object_id": msg_in["object_id"],
+                "object_type": "order",
+                "payload": {
+                    "id": msg_in["object_id"],
+                    "date": order["date"],
+                    "cost": order["cost"],
+                    "payment": order["payment"],
+                    "status": order["final_status"],
+                    "restaurant": self._format_restaurant(restaurant_id, restaurant_name),
+                    "user": self._format_user(user_id, user_name, user_login),
+                    "products": self._format_items(order["order_items"], restaurant)
+                }
+            }
+
+            self._producer.produce(msg_out)
+            self._logger.info(f"{datetime.utcnow()}. Message Sent")
+
+
         # Пишем в лог, что джоб успешно завершен.
         self._logger.info(f"{datetime.utcnow()}: FINISH")
 
-    # Функция для получения категории продукта
-    def get_category(self,menu_dict:dict,id_product:str)->str:
-        rez = ""
-        for item in menu_dict:
-            if item["_id"] ==id_product:
-                rez = item["category"]
-                break        
-        return rez    
-    
-    # Получить список заказанных товаров
-    def get_product_list(self,order_items:dict,restaurant_info:dict):
-        rez = []
-        for item in order_items:
-            rez.append({"id":item["id"],
-                        "price":item["price"],
-                        "quantity":item["quantity"],
-                        "name":item["name"],
-                        "category":self.get_category(restaurant_info["menu"],item["id"])})
-        return rez
+    def _format_restaurant(self, id, name) -> Dict[str, str]:
+        return {
+            "id": id,
+            "name": name
+        }
+
+    def _format_user(self, id, name, login) -> Dict[str, str]:
+        return {
+            "id": id,
+            "name": name,
+            "login": login
+        }
+
+    def _format_items(self, order_items, restaurant) -> List[Dict[str, str]]:
+        items = []
+
+        menu = restaurant["menu"]
+        for it in order_items:
+            menu_item = next(x for x in menu if x["_id"] == it["id"])
+            dst_it = {
+                "id": it["id"],
+                "price": it["price"],
+                "quantity": it["quantity"],
+                "name": menu_item["name"],
+                "category": menu_item["category"]
+            }
+            items.append(dst_it)
+
+        return items
