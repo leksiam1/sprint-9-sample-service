@@ -6,12 +6,12 @@ replicaCount: 1
 
 image:
   # Link to your container registry. You will launch it in Yandex Cloud.
-  repository: cr.yandex/crpkqq3h6l5ujnvhb0dk/dds_service
+  repository: cr.yandex/crpkqq3h6l5ujnvhb0dk/cdm-service
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: v2024-01-10-r7 
+  tag: "v2024-01-10-r5" 
 
-containerPort: '5000'
+containerPort: 5000
 
 config:
   KAFKA_HOST: "rc1a-9ntr19s0p7mjntbm.mdb.yandexcloud.net"
@@ -19,15 +19,13 @@ config:
   KAFKA_CONSUMER_USERNAME: "producer_consumer"
   KAFKA_CONSUMER_PASSWORD: "res1#pass_leks"
   KAFKA_CONSUMER_GROUP: "main-consumer-group"
-  KAFKA_SOURCE_TOPIC: stg-service-orders
-  KAFKA_DESTINATION_TOPIC: dds-service-orders
+  KAFKA_SOURCE_TOPIC: dds-service-orders
 
   PG_WAREHOUSE_HOST: "rc1b-gtbw23dw6wwofm3k.mdb.yandexcloud.net"
   PG_WAREHOUSE_PORT: "6432"
   PG_WAREHOUSE_DBNAME: "sprint9dwh"
   PG_WAREHOUSE_USER: "db_user"
   PG_WAREHOUSE_PASSWORD: "res1#pass_leks"
-
 
 imagePullSecrets: []
 nameOverride: ""
